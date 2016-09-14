@@ -2,14 +2,18 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
+	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var cfgFile string
 
 var Version string = "Unknown"
+
+var input1 string
+var input2 string
+var parser *io.FastQParser
 
 var RootCmd = &cobra.Command{
 	Use:   "fastqutils",
@@ -20,6 +24,13 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if input2 != "none" {
+			parser = io.NewPairedEndParser(input1, input2)
+		} else {
+			parser = io.NewSingleEndParser(input1)
+		}
+	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -33,5 +44,6 @@ func Execute() {
 }
 
 func init() {
-
+	RootCmd.PersistentFlags().StringVarP(&input1, "input-1", "1", "stdin", "First read fastq file")
+	RootCmd.PersistentFlags().StringVarP(&input2, "input-2", "2", "none", "Second read fastq file")
 }
