@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"errors"
+	errorp "github.com/fredericlemoine/fastqutils/error"
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"os"
 	"strings"
@@ -40,13 +41,13 @@ func getReader(file string) *bufio.Reader {
 	} else {
 		fi, err = os.Open(file)
 		if err != nil {
-			ExitWithMessage(err)
+			errorp.ExitWithMessage(err)
 		}
 	}
 
 	if strings.HasSuffix(file, ".gz") {
 		if gr, err := gzip.NewReader(fi); err != nil {
-			ExitWithMessage(err)
+			errorp.ExitWithMessage(err)
 		} else {
 			reader = bufio.NewReader(gr)
 		}
@@ -113,7 +114,7 @@ func (p *FastQParser) NextEntry() (*fastq.FastqEntry, *fastq.FastqEntry, error) 
 			return nil, nil, err
 		}
 		if len(seq2) != len(qual2) {
-			ExitWithMessage(errors.New("Length of sequence is different from length of quality"))
+			errorp.ExitWithMessage(errors.New("Length of sequence is different from length of quality"))
 		}
 		entry2 = fastq.NewFastQEntry(string(name2), seq2, qual2)
 	}

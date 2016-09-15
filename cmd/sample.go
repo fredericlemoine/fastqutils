@@ -1,11 +1,14 @@
 package cmd
 
 import (
-	"fmt"
+	"bufio"
+	"compress/gzip"
+	"github.com/fredericlemoine/fastqutils/error"
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/spf13/cobra"
 	"math/rand"
+	"os"
 )
 
 var sampleNumber int
@@ -30,7 +33,7 @@ to quickly create a Cobra application.`,
 			entry1, entry2, err := parser.NextEntry()
 			if err != nil {
 				if err.Error() != "EOF" {
-					io.WarnMessage(err)
+					error.WarnMessage(err)
 				}
 				break
 			}
@@ -41,7 +44,7 @@ to quickly create a Cobra application.`,
 					sampled2[nbrecords] = entry2
 				}
 			} else {
-				random := rand.Intn(nbrecords - 1)
+				random := rand.Intn(nbrecords)
 				if random < sampleNumber {
 					sampled1[random] = entry1
 					if entry2 != nil {
@@ -52,27 +55,37 @@ to quickly create a Cobra application.`,
 			nbrecords++
 		}
 
+		var w1, w2 *bufio.Writer
+		var f1, f2 *os.File
+		var g1, g2 *gzip.Writer
+
+		w1, g1, f1 = io.GetWriter(output1, gziped)
+		if input2 != "none" {
+			w2, g2, f2 = io.GetWriter(output2, gziped)
+		}
+
 		for i := 0; i < sampleNumber; i++ {
 			entry1 := sampled1[i]
 			entry2 := sampled2[i]
 
-			fmt.Print(entry1.Name)
-			if entry2 != nil {
-				fmt.Print("\t" + entry2.Name)
+			io.WriteEntry(w1, entry1)
+			if w2 != nil {
+				io.WriteEntry(w2, entry2)
 			}
-			fmt.Println()
-
-			fmt.Print(string(entry1.Sequence))
-			if entry2 != nil {
-				fmt.Print("\t" + string(entry2.Sequence))
+		}
+		w1.Flush()
+		if g1 != nil {
+			g1.Flush()
+			g1.Close()
+		}
+		f1.Close()
+		if input2 != "none" {
+			w2.Flush()
+			if g2 != nil {
+				g2.Flush()
+				g2.Close()
 			}
-			fmt.Println()
-
-			fmt.Print(string(entry1.Quality))
-			if entry2 != nil {
-				fmt.Print("\t" + string(entry2.Quality))
-			}
-			fmt.Println()
+			f2.Close()
 		}
 	},
 }
@@ -81,5 +94,8 @@ func init() {
 	RootCmd.AddCommand(sampleCmd)
 
 	sampleCmd.PersistentFlags().IntVarP(&sampleNumber, "number", "n", 1, "Number of reads to sample from the FastQ file")
+	sampleCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s)")
+	sampleCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
+	sampleCmd.PersistentFlags().StringVar(&output2, "output2", "stdout", "Output file 2 (if paired)")
 
 }
