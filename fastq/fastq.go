@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fredericlemoine/fastqutils/error"
+	"github.com/fredericlemoine/gostats"
 	"math/rand"
 )
 
@@ -24,7 +25,7 @@ func NewFastQEntry(name string, seq []byte, qual []byte) *FastqEntry {
 
 /* Generates a Fastq Entry */
 func GenFastQEntry(length int, id int) *FastqEntry {
-	name := fmt.Sprintf("read%d", id)
+	name := fmt.Sprintf("@read%d", id)
 	seq := genseq(length)
 	qual := genqual(length)
 	return &FastqEntry{
@@ -62,7 +63,7 @@ func nt(n int) byte {
 func genqual(length int) []byte {
 	var buf bytes.Buffer
 	for i := 0; i < length; i++ {
-		buf.WriteByte(byte(rand.Intn(56) + 33))
+		buf.WriteByte(byte(gostats.Binomial(float64(length-i)/float64(length)*0.99, 41) + 33))
 	}
 	return buf.Bytes()
 }
