@@ -38,13 +38,13 @@ func GenFastQEntry(length int, id int) *FastqEntry {
 func genseq(length int) []byte {
 	var buf bytes.Buffer
 	for i := 0; i < length; i++ {
-		buf.WriteByte(nt(rand.Intn(4)))
+		buf.WriteByte(Nt(rand.Intn(4)))
 	}
 	return buf.Bytes()
 }
 
 // Returns the nt
-func nt(n int) byte {
+func Nt(n int) byte {
 	switch n {
 	case 0:
 		return 'A'
@@ -56,6 +56,23 @@ func nt(n int) byte {
 		return 'T'
 	default:
 		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide with code %d", n)))
+	}
+	return '\n'
+}
+
+// Returns the nt
+func Index(b byte) int {
+	switch b {
+	case 'A':
+		return 0
+	case 'C':
+		return 1
+	case 'G':
+		return 2
+	case 'T':
+		return 3
+	default:
+		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide %c", b)))
 	}
 	return '\n'
 }
