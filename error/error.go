@@ -24,5 +24,5 @@ func WarnMessage(err error) {
 	_, fn, line, _ := runtime.Caller(1)
 
 	name := strings.Split(fn, "/fastqutils/")[1]
-	fmt.Fprintf(os.Stderr, "[Error] in %s (line %d), message: %v\n", name, line, err)
+	fmt.Fprintf(os.Stderr, "[Warning] in %s (line %d), message: %v\n", name, line, err)
 }
