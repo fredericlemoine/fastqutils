@@ -68,7 +68,7 @@ var sampleCmd = &cobra.Command{
 		var g1, g2 *gzip.Writer
 
 		w1, g1, f1 = io.GetWriter(output1, gziped)
-		if input2 != "none" {
+		if input2 != "none" && output2 != "none" {
 			w2, g2, f2 = io.GetWriter(output2, gziped)
 		}
 
@@ -87,7 +87,7 @@ var sampleCmd = &cobra.Command{
 			g1.Close()
 		}
 		f1.Close()
-		if input2 != "none" {
+		if input2 != "none" && output2 != "none" {
 			w2.Flush()
 			if g2 != nil {
 				g2.Flush()
@@ -102,8 +102,7 @@ func init() {
 	RootCmd.AddCommand(sampleCmd)
 
 	sampleCmd.PersistentFlags().IntVarP(&sampleNumber, "number", "n", 1, "Number of reads to sample from the FastQ file")
-	sampleCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s)")
+	sampleCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
 	sampleCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
-	sampleCmd.PersistentFlags().StringVar(&output2, "output2", "stdout", "Output file 2 (if paired)")
-
+	sampleCmd.PersistentFlags().StringVar(&output2, "output2", "none", "Output file 2 (if paired)")
 }

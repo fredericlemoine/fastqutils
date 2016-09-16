@@ -8,8 +8,8 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Prints the versio of fastqutils",
-	Long:  `Prints the versio of fastqutils`,
+	Short: "Prints the version of fastqutils",
+	Long:  `Prints the version of fastqutils`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(Version)
 	},

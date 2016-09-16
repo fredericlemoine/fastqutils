@@ -20,13 +20,15 @@ var seed int64
 
 var RootCmd = &cobra.Command{
 	Use:   "fastqutils",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Some tools to handle fastq files",
+	Long: `Some tools to handle fastqfiles.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+For now:
+sample: to take a subset of a whole fastqfile in one pass
+stats : a few statistics about the fastq file
+
+Works for single and paired end files.
+`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		rand.Seed(seed)
 		if input2 != "none" {
