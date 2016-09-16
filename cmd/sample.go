@@ -3,6 +3,8 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
+	"errors"
+	"fmt"
 	"github.com/fredericlemoine/fastqutils/error"
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"github.com/fredericlemoine/fastqutils/io"
@@ -12,6 +14,13 @@ import (
 )
 
 var sampleNumber int
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 // sampleCmd represents the sample command
 var sampleCmd = &cobra.Command{
@@ -50,6 +59,10 @@ var sampleCmd = &cobra.Command{
 			nbrecords++
 		}
 
+		if nbrecords < sampleNumber {
+			error.WarnMessage(errors.New(fmt.Sprintf("Fastq file length (%d) is < sampling number (%d) , will write only %d reads", nbrecords, sampleNumber, nbrecords)))
+		}
+
 		var w1, w2 *bufio.Writer
 		var f1, f2 *os.File
 		var g1, g2 *gzip.Writer
@@ -59,7 +72,7 @@ var sampleCmd = &cobra.Command{
 			w2, g2, f2 = io.GetWriter(output2, gziped)
 		}
 
-		for i := 0; i < sampleNumber; i++ {
+		for i := 0; i < min(sampleNumber, nbrecords); i++ {
 			entry1 := sampled1[i]
 			entry2 := sampled2[i]
 
