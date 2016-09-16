@@ -27,6 +27,8 @@ to quickly create a Cobra application.`,
 			fmt.Print("\t")
 			fmt.Println(v)
 		}
+		fmt.Print("AvgQual\t")
+		fmt.Println(stats.MeanQual)
 	},
 }
 
