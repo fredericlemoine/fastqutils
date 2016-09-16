@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"github.com/fredericlemoine/fastqutils/io"
+	"github.com/fredericlemoine/fastqutils/stats"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -14,26 +15,35 @@ var gziped bool
 var length int
 var nbseqs int
 var output1, output2 string
+var encoding string
 
 // generateCmd represents the generate command
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generates A random Fastq file",
-	Long:  `Generates a random Fastq file / single or paired end`,
+	Long: `Generates a random Fastq file / single or paired end
+
+It does not follow any specific model. 
+
+It draws uniformly nucleotides from A,C,G,T, and qualities depending on the encoding.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var w1, w2 *bufio.Writer
 		var f1, f2 *os.File
 		var g1, g2 *gzip.Writer
 
+		qualenc := stats.EncodingFromString(encoding)
+		minqual, maxqual := stats.MinQual(qualenc), stats.MaxQual(qualenc)
 		w1, g1, f1 = io.GetWriter(output1, gziped)
 		if paired && output2 != "none" {
 			w2, g2, f2 = io.GetWriter(output2, gziped)
 		}
+
 		for i := 0; i < nbseqs; i++ {
-			entry1 := fastq.GenFastQEntry(length, i)
+			entry1 := fastq.GenFastQEntry(length, i, minqual, maxqual)
 			io.WriteEntry(w1, entry1)
 			if paired && w2 != nil {
-				entry2 := fastq.GenFastQEntry(length, i)
+				entry2 := fastq.GenFastQEntry(length, i, minqual, maxqual)
 				io.WriteEntry(w2, entry2)
 			}
 		}
@@ -63,4 +73,5 @@ func init() {
 	generateCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s)")
 	generateCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
 	generateCmd.PersistentFlags().StringVar(&output2, "output2", "stdout", "Output file 2 (if paired)")
+	generateCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding")
 }

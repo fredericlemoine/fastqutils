@@ -24,10 +24,10 @@ func NewFastQEntry(name string, seq []byte, qual []byte) *FastqEntry {
 }
 
 /* Generates a Fastq Entry */
-func GenFastQEntry(length int, id int) *FastqEntry {
+func GenFastQEntry(length int, id int, minqual, maxqual int) *FastqEntry {
 	name := fmt.Sprintf("@read%d", id)
 	seq := genseq(length)
-	qual := genqual(length)
+	qual := genqual(length, minqual, maxqual)
 	return &FastqEntry{
 		name,
 		seq,
@@ -77,10 +77,10 @@ func Index(b byte) int {
 	return '\n'
 }
 
-func genqual(length int) []byte {
+func genqual(length int, minqual, maxqual int) []byte {
 	var buf bytes.Buffer
 	for i := 0; i < length; i++ {
-		buf.WriteByte(byte(gostats.Binomial(float64(length-i)/float64(length)*0.99, 41) + 33))
+		buf.WriteByte(byte(gostats.Binomial(float64(length-i)/float64(length)*0.99, (maxqual-minqual)) + minqual))
 	}
 	return buf.Bytes()
 }

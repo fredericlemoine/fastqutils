@@ -11,6 +11,23 @@ type Stats struct {
 	Paired   bool      // If the Fastq are paired end
 	TotalNt  []float64 // global % of A / C / G / T
 	MeanQual float64   // Average base quality
+	MinQual  int       // Min quality score
+	MaxQual  int       // Max quality score
+	Encoding int       // Quality encoding
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func ComputeStats(parser *io.FastQParser) Stats {
@@ -20,6 +37,8 @@ func ComputeStats(parser *io.FastQParser) Stats {
 	freqNt := make([]float64, 4)
 	var total int64 = 0
 	var meanQual float64
+	minqual, maxqual := 1000, 0
+
 	for {
 		entry1, entry2, err := parser.NextEntry()
 		if err != nil {
@@ -32,10 +51,14 @@ func ComputeStats(parser *io.FastQParser) Stats {
 		for i := 0; i < len(entry1.Sequence); i++ {
 			totalNt[fastq.Index(entry1.Sequence[i])]++
 			meanQual += float64(int(entry1.Quality[i]))
+			minqual = min(minqual, int(entry1.Quality[i]))
+			maxqual = max(maxqual, int(entry1.Quality[i]))
 			total++
 			if entry2 != nil {
 				totalNt[fastq.Index(entry2.Sequence[i])]++
 				meanQual += float64(int(entry2.Quality[i]))
+				minqual = min(minqual, int(entry2.Quality[i]))
+				maxqual = max(maxqual, int(entry2.Quality[i]))
 				total++
 			}
 		}
@@ -50,10 +73,15 @@ func ComputeStats(parser *io.FastQParser) Stats {
 		freqNt[i] = float64(v) / float64(total)
 	}
 
+	encoding := DetectEncoding(minqual, maxqual)
+
 	return Stats{
 		nbrecords,
 		paired,
 		freqNt,
-		meanQual / float64(total),
+		meanQual/float64(total) - float64(EncodingOffset(encoding)),
+		minqual - EncodingOffset(encoding),
+		maxqual - EncodingOffset(encoding),
+		encoding,
 	}
 }

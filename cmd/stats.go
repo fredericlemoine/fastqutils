@@ -17,18 +17,24 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		stats := stats.ComputeStats(parser)
+		stat := stats.ComputeStats(parser)
 		fmt.Print("NSeq\t")
-		fmt.Println(stats.NSeq)
+		fmt.Println(stat.NSeq)
 		fmt.Print("Paired\t")
-		fmt.Println(stats.Paired)
-		for i, v := range stats.TotalNt {
+		fmt.Println(stat.Paired)
+		for i, v := range stat.TotalNt {
 			fmt.Print(fmt.Sprintf("%c", fastq.Nt(i)))
 			fmt.Print("\t")
 			fmt.Println(v)
 		}
+		fmt.Print("Encoding\t")
+		fmt.Println(stats.EncodingToString(stat.Encoding))
 		fmt.Print("AvgQual\t")
-		fmt.Println(stats.MeanQual)
+		fmt.Println(stat.MeanQual)
+		fmt.Print("MinQual\t")
+		fmt.Println(stat.MinQual)
+		fmt.Print("MaxQual\t")
+		fmt.Println(stat.MaxQual)
 	},
 }
 
