@@ -21,4 +21,4 @@ deploy:
 	env GOOS=darwin GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/fastqutils_386_darwin -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
 	env GOOS=linux GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/fastqutils_amd64_linux -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
 	env GOOS=linux GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/fastqutils_386_linux -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
-	tar -czvf deploy/${VERSION}.tar.gz deploy/${VERSION}
+	tar -czvf deploy/${VERSION}.tar.gz --directory="deploy" ${VERSION}
