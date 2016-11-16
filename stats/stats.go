@@ -33,8 +33,8 @@ func max(a, b int) int {
 func ComputeStats(parser *io.FastQParser) Stats {
 	nbrecords := 0
 	paired := true
-	totalNt := make([]int64, 4)
-	freqNt := make([]float64, 4)
+	totalNt := make([]int64, 5)
+	freqNt := make([]float64, 5)
 	var total int64 = 0
 	var meanQual float64
 	minqual, maxqual := 1000, 0

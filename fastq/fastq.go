@@ -54,6 +54,8 @@ func Nt(n int) byte {
 		return 'G'
 	case 3:
 		return 'T'
+	case 4:
+		return 'N'
 	default:
 		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide with code %d", n)))
 	}
@@ -71,6 +73,8 @@ func Index(b byte) int {
 		return 2
 	case 'T':
 		return 3
+	case 'N':
+		return 4
 	default:
 		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide %c", b)))
 	}
