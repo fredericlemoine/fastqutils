@@ -5,12 +5,13 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/fastqutils/error"
-	"github.com/fredericlemoine/fastqutils/fastq"
-	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
+
+	"github.com/fredericlemoine/fastqutils/error"
+	"github.com/fredericlemoine/fastqutils/fastq"
+	"github.com/fredericlemoine/fastqutils/io"
 )
 
 var sampleNumber int
