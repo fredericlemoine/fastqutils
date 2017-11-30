@@ -19,6 +19,10 @@ func WriteEntry(w *bufio.Writer, entry *fastq.FastqEntry) {
 	)
 }
 
+func WriteEntryFasta(w *bufio.Writer, entry *fastq.FastqEntry) {
+	w.WriteString(fmt.Sprintf(">%s\n%s\n", entry.Name, entry.Sequence))
+}
+
 func GetWriter(file string, gz bool) (*bufio.Writer, *gzip.Writer, *os.File) {
 	ext := ""
 	var fi *os.File
