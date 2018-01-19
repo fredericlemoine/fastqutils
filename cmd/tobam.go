@@ -3,7 +3,6 @@ package cmd
 import (
 	"crypto/md5"
 	"io"
-	"net/url"
 	"os"
 
 	"github.com/biogo/hts/bam"
@@ -23,13 +22,11 @@ var tobamCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var bamwriter *bam.Writer
 		var header *sam.Header
-		var reference *sam.Reference
-		var refurl *url.URL
 		var r1, r2 *sam.Record
 		var f *os.File
 		var err error
 		mdsum := md5.New()
-		io.WriteString(mdsum, "None")
+		io.WriteString(mdsum, "*")
 
 		if output == "stdout" || output == "-" {
 			f = os.Stdout
@@ -38,16 +35,9 @@ var tobamCmd = &cobra.Command{
 				errorp.ExitWithMessage(err)
 			}
 		}
-		if refurl, err = url.Parse("http://unalignedreference.nil"); err != nil {
+		if header, err = sam.NewHeader(nil, nil); err != nil {
 			errorp.ExitWithMessage(err)
 		}
-		if reference, err = sam.NewReference("None", "None", "None", 1, mdsum.Sum(nil), refurl); err != nil {
-			errorp.ExitWithMessage(err)
-		}
-		if header, err = sam.NewHeader(nil, []*sam.Reference{reference}); err != nil {
-			errorp.ExitWithMessage(err)
-		}
-
 		bamwriter, err = bam.NewWriter(f, header, 1)
 
 		for {
@@ -63,7 +53,7 @@ var tobamCmd = &cobra.Command{
 			if entry2 != nil {
 				flag1 = flag1 | sam.Paired | sam.MateUnmapped
 			}
-			if r1, err = sam.NewRecord(entry1.Name, reference, reference, -1, -1, -1, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
+			if r1, err = sam.NewRecord(entry1.Name, nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
 				errorp.ExitWithMessage(err)
 			}
 			r1.Flags = flag1
@@ -73,7 +63,7 @@ var tobamCmd = &cobra.Command{
 
 			if entry2 != nil {
 				flag2 := sam.Read2 | sam.Unmapped | sam.Paired | sam.MateUnmapped
-				if r2, err = sam.NewRecord(entry2.Name, reference, reference, -1, -1, -1, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
+				if r2, err = sam.NewRecord(entry2.Name, nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
 					errorp.ExitWithMessage(err)
 				}
 				r2.Flags = flag2
