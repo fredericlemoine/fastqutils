@@ -53,7 +53,7 @@ var tobamCmd = &cobra.Command{
 			if entry2 != nil {
 				flag1 = flag1 | sam.Paired | sam.MateUnmapped
 			}
-			if r1, err = sam.NewRecord(entry1.Name, nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
+			if r1, err = sam.NewRecord(string(entry1.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
 				errorp.ExitWithMessage(err)
 			}
 			r1.Flags = flag1
@@ -63,7 +63,7 @@ var tobamCmd = &cobra.Command{
 
 			if entry2 != nil {
 				flag2 := sam.Read2 | sam.Unmapped | sam.Paired | sam.MateUnmapped
-				if r2, err = sam.NewRecord(entry2.Name, nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
+				if r2, err = sam.NewRecord(string(entry2.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
 					errorp.ExitWithMessage(err)
 				}
 				r2.Flags = flag2

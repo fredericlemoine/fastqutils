@@ -10,22 +10,14 @@ import (
 )
 
 type FastqEntry struct {
-	Name     string
+	Name     []byte
 	Sequence []byte
 	Quality  []byte
 }
 
-func NewFastQEntry(name string, seq []byte, qual []byte) *FastqEntry {
-	return &FastqEntry{
-		name,
-		seq,
-		qual,
-	}
-}
-
 /* Generates a Fastq Entry */
 func GenFastQEntry(length int, id int, minqual, maxqual int) *FastqEntry {
-	name := fmt.Sprintf("@read%d", id)
+	name := []byte(fmt.Sprintf("@read%d", id))
 	seq := genseq(length)
 	qual := genqual(length, minqual, maxqual)
 	return &FastqEntry{

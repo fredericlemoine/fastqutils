@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+var ErrBufferFull = errors.New("bufio: buffer full")
+
 type FastQParser struct {
 	reader1 *bufio.Reader // First read file
 	reader2 *bufio.Reader // paired read file (if any, nil otherwise)
@@ -32,8 +34,7 @@ func NewPairedEndParser(read1 string, read2 string) *FastQParser {
 	}
 }
 
-func getReader(file string) *bufio.Reader {
-	var reader *bufio.Reader
+func getReader(file string) (reader *bufio.Reader) {
 	var fi *os.File
 	var err error
 	if file == "stdin" || file == "-" {
@@ -54,26 +55,18 @@ func getReader(file string) *bufio.Reader {
 	} else {
 		reader = bufio.NewReader(fi)
 	}
-
-	//defer fi.Close()
-	return reader
+	return
 }
 
 // Readln returns a single line (without the ending \n)
 // from the input buffered reader.
 // An error is returned iff there is an error with the
 // buffered reader.
-func readln(r *bufio.Reader) ([]byte, error) {
-	var (
-		isPrefix bool  = true
-		err      error = nil
-		line, ln []byte
-	)
-	for isPrefix && err == nil {
-		line, isPrefix, err = r.ReadLine()
-		ln = append(ln, line...)
+func readln(r *bufio.Reader) (ln []byte, err error) {
+	if ln, err = r.ReadBytes('\n'); err == nil && ln[len(ln)-1] == '\n' {
+		ln = ln[:len(ln)-1]
 	}
-	return ln, err
+	return
 }
 
 // Returns the next entries:
@@ -98,7 +91,7 @@ func (p *FastQParser) NextEntry() (*fastq.FastqEntry, *fastq.FastqEntry, error) 
 	if qual1, err = readln(p.reader1); err != nil {
 		return nil, nil, err
 	}
-	entry1 = fastq.NewFastQEntry(string(name1), seq1, qual1)
+	entry1 = &fastq.FastqEntry{name1, seq1, qual1}
 
 	if p.reader2 != nil {
 		if name2, err = readln(p.reader2); err != nil {
@@ -116,7 +109,7 @@ func (p *FastQParser) NextEntry() (*fastq.FastqEntry, *fastq.FastqEntry, error) 
 		if len(seq2) != len(qual2) {
 			errorp.ExitWithMessage(errors.New("Length of sequence is different from length of quality"))
 		}
-		entry2 = fastq.NewFastQEntry(string(name2), seq2, qual2)
+		entry2 = &fastq.FastqEntry{name2, seq2, qual2}
 	}
 	return entry1, entry2, nil
 }
