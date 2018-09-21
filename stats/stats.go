@@ -54,7 +54,9 @@ func ComputeStats(parser *io.FastQParser) Stats {
 			minqual = min(minqual, int(entry1.Quality[i]))
 			maxqual = max(maxqual, int(entry1.Quality[i]))
 			total++
-			if entry2 != nil {
+		}
+		if entry2 != nil {
+			for i := 0; i < len(entry2.Sequence); i++ {
 				totalNt[fastq.Index(entry2.Sequence[i])]++
 				meanQual += float64(int(entry2.Quality[i]))
 				minqual = min(minqual, int(entry2.Quality[i]))
