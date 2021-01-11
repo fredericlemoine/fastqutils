@@ -17,7 +17,7 @@ var output string
 var tobamCmd = &cobra.Command{
 	Use:   "tobam",
 	Short: "Generates an unaligned bam file from FASTQ File(s)",
-	Long: `Generates an analigned bam file
+	Long: `Generates an unaligned bam file
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		var bamwriter *bam.Writer
