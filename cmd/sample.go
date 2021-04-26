@@ -3,11 +3,11 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
-	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/fredericlemoine/fastqutils/error"
 	"github.com/fredericlemoine/fastqutils/fastq"
@@ -61,7 +61,7 @@ var sampleCmd = &cobra.Command{
 		}
 
 		if nbrecords < sampleNumber {
-			error.WarnMessage(errors.New(fmt.Sprintf("Fastq file length (%d) is < sampling number (%d) , will write only %d reads", nbrecords, sampleNumber, nbrecords)))
+			error.WarnMessage(fmt.Errorf("Fastq file length (%d) is < sampling number (%d) , will write only %d reads", nbrecords, sampleNumber, nbrecords))
 		}
 
 		var w1, w2 *bufio.Writer

@@ -2,15 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fredericlemoine/fastqutils/io"
-	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/fredericlemoine/fastqutils/io"
+	"github.com/spf13/cobra"
 )
 
 var cfgFile string
 
+// Version stores tool version
 var Version string = "Unknown"
 
 var input1 string
@@ -18,6 +20,7 @@ var input2 string
 var parser *io.FastQParser
 var seed int64
 
+// RootCmd represents the root Command
 var RootCmd = &cobra.Command{
 	Use:   "fastqutils",
 	Short: "Some tools to handle fastq files",
@@ -42,6 +45,7 @@ Works for single and paired end files.
 	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
+// Execute executes the root command
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
