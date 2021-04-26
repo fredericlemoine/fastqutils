@@ -13,6 +13,8 @@ install:
 test:
 	${GO_EXECUTABLE} test github.com/fredericlemoine/fastqutils/tests/
 
+.PHONY: deploy
+
 deploy:
 	mkdir -p deploy/${VERSION}
 	env GOOS=windows GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/fastqutils_amd64.exe -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
