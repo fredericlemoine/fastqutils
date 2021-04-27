@@ -88,7 +88,6 @@ var bam2FastaCmd = &cobra.Command{
 				} else if t == sam.CigarDeletion {
 					fmt.Fprintf(writer, "%s", strings.Repeat("-", op.Len()))
 				}
-				fmt.Printf("%s : %d (%s)\n", string(seq[pos:pos+op.Len()]), c.Query, t.String())
 				pos += c.Query * op.Len()
 			}
 
