@@ -64,7 +64,7 @@ func EncodingFromString(encod string) (enc int, err error) {
 	case "unknown":
 		enc = UNKOWN
 	default:
-		err = fmt.Errorf("this encoding Code does not exist : %s", encod)
+		err = fmt.Errorf("this encoding Code does not exist : %s, possible values are : sanger, solexa, illumina1.3, illumina1.5, illumina1.8", encod)
 	}
 	return
 }
@@ -84,7 +84,7 @@ func EncodingOffset(encod int) (off int, err error) {
 	case UNKOWN:
 		off = 0
 	default:
-		err = fmt.Errorf("this encoding Code does not exist : %d", encod)
+		err = fmt.Errorf(" : %d", encod)
 	}
 	return
 }

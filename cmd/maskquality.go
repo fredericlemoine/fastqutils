@@ -23,7 +23,6 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
-	"fmt"
 	"log"
 	"os"
 
@@ -68,7 +67,7 @@ func init() {
 	qualityCmd.PersistentFlags().StringVar(&output2, "output2", "none", "Output file 2 (if paired)")
 	qualityCmd.PersistentFlags().StringVarP(&input1, "input1", "1", "stdin", "First read fastq file")
 	qualityCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
-	qualityCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding")
+	qualityCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding, possible values: sanger, solexa, illumina1.3, illumina1.5, illumina1.8")
 	qualityCmd.PersistentFlags().IntVarP(&qual, "quality", "q", 20, "Quality cutoff below which bases are masked")
 }
 
@@ -153,12 +152,6 @@ func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped 
 	if enc, err = stats.EncodingFromString(encoding); err != nil {
 		return
 	}
-
-	if enc == stats.UNKOWN {
-		err = fmt.Errorf("unknown Fastq encoding, possible values are : Sanger, Solexa, Illumina 1.3, Illumina 1.5, Illumina 1.8")
-		return
-	}
-
 	if offset, err = stats.EncodingOffset(enc); err != nil {
 		return
 	}

@@ -89,5 +89,5 @@ func init() {
 	generateCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s)")
 	generateCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
 	generateCmd.PersistentFlags().StringVar(&output2, "output2", "stdout", "Output file 2 (if paired)")
-	generateCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding")
+	generateCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding, possible values: sanger, solexa, illumina1.3, illumina1.5, illumina1.8")
 }
