@@ -26,7 +26,7 @@ var tobamCmd = &cobra.Command{
 		var f *os.File
 		var err error
 		var parser *io.FastQParser
-		var offset, bamoffset int
+		var offset int
 		var enc int
 		//mdsum := md5.New()
 		//io.WriteString(mdsum, "*")
@@ -35,9 +35,6 @@ var tobamCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		if offset, err = stats.EncodingOffset(enc); err != nil {
-			log.Fatal(err)
-		}
-		if bamoffset, err = stats.EncodingOffset(stats.ILLUMINA_1_8); err != nil {
 			log.Fatal(err)
 		}
 
@@ -75,7 +72,7 @@ var tobamCmd = &cobra.Command{
 
 			// We encode the quality with the right offset
 			for i, q := range entry1.Quality {
-				entry1.Quality[i] = byte(int(q) - offset + bamoffset)
+				entry1.Quality[i] = byte(int(q) - offset)
 			}
 
 			if r1, err = sam.NewRecord(string(entry1.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
@@ -90,8 +87,9 @@ var tobamCmd = &cobra.Command{
 				flag2 := sam.Read2 | sam.Unmapped | sam.Paired | sam.MateUnmapped
 				// We encode the quality of read 2 with the right offset
 				for i, q := range entry2.Quality {
-					entry2.Quality[i] = byte(int(q) - offset + bamoffset)
+					entry2.Quality[i] = byte(int(q) - offset)
 				}
+
 				if r2, err = sam.NewRecord(string(entry2.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
 					log.Fatal(err)
 				}

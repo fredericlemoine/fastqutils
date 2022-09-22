@@ -46,6 +46,7 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 			if err.Error() != "EOF" {
 				return
 			}
+			err = nil
 			break
 		}
 
