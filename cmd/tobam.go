@@ -87,5 +87,7 @@ var tobamCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(tobamCmd)
+	tobamCmd.PersistentFlags().StringVarP(&input1, "input1", "1", "stdin", "First read fastq file")
+	tobamCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
 	tobamCmd.PersistentFlags().StringVarP(&output, "output", "o", "stdout", "Output unaligned BAM file")
 }
