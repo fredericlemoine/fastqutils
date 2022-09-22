@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	errorp "github.com/fredericlemoine/fastqutils/error"
-	"github.com/fredericlemoine/fastqutils/fastq"
 	"os"
+
+	"github.com/fredericlemoine/fastqutils/fastq"
 )
 
 func WriteEntry(w *bufio.Writer, entry *fastq.FastqEntry) {
@@ -23,11 +23,8 @@ func WriteEntryFasta(w *bufio.Writer, entry *fastq.FastqEntry) {
 	w.WriteString(fmt.Sprintf(">%s\n%s\n", entry.Name, entry.Sequence))
 }
 
-func GetWriter(file string, gz bool) (*bufio.Writer, *gzip.Writer, *os.File) {
+func GetWriter(file string, gz bool) (w *bufio.Writer, gw *gzip.Writer, fi *os.File, err error) {
 	ext := ""
-	var fi *os.File
-	var w *bufio.Writer
-	var err error
 	if gz {
 		ext = ".gz"
 	}
@@ -36,11 +33,10 @@ func GetWriter(file string, gz bool) (*bufio.Writer, *gzip.Writer, *os.File) {
 		fi = os.Stdout
 	} else {
 		if fi, err = os.Create(file + ext); err != nil {
-			errorp.ExitWithMessage(err)
+			return
 		}
 	}
 
-	var gw *gzip.Writer
 	if gz {
 		gw = gzip.NewWriter(fi)
 		w = bufio.NewWriter(gw)
@@ -48,5 +44,5 @@ func GetWriter(file string, gz bool) (*bufio.Writer, *gzip.Writer, *os.File) {
 		w = bufio.NewWriter(fi)
 	}
 
-	return w, gw, fi
+	return
 }

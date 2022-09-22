@@ -1,9 +1,7 @@
 package stats
 
 import (
-	"errors"
 	"fmt"
-	"github.com/fredericlemoine/fastqutils/error"
 )
 
 const (
@@ -31,102 +29,102 @@ func DetectEncoding(min, max int) int {
 	}
 }
 
-func EncodingToString(encod int) string {
+func EncodingToString(encod int) (enc string, err error) {
 	switch encod {
 	case SANGER:
-		return "Sanger"
+		enc = "Sanger"
 	case SOLEXA:
-		return "Solexa"
+		enc = "Solexa"
 	case ILLUMINA_1_3:
-		return "Illumina 1.3"
+		enc = "Illumina 1.3"
 	case ILLUMINA_1_5:
-		return "Illumina 1.5"
+		enc = "Illumina 1.5"
 	case ILLUMINA_1_8:
-		return "Illumina 1.8"
+		enc = "Illumina 1.8"
 	case UNKOWN:
-		return "Unknown"
+		enc = "Unknown"
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("This encoding Code does not exist : %d", encod)))
+		err = fmt.Errorf("this encoding Code does not exist : %d", encod)
 	}
-	return ""
+	return
 }
 
-func EncodingFromString(encod string) int {
+func EncodingFromString(encod string) (enc int, err error) {
 	switch encod {
 	case "sanger":
-		return SANGER
+		enc = SANGER
 	case "solexa":
-		return SOLEXA
+		enc = SOLEXA
 	case "illumina1.3":
-		return ILLUMINA_1_3
+		enc = ILLUMINA_1_3
 	case "illumina1.5":
-		return ILLUMINA_1_5
+		enc = ILLUMINA_1_5
 	case "illumina1.8":
-		return ILLUMINA_1_8
+		enc = ILLUMINA_1_8
 	case "unknown":
-		return UNKOWN
+		enc = UNKOWN
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("This encoding Code does not exist : %s", encod)))
+		err = fmt.Errorf("this encoding Code does not exist : %s", encod)
 	}
-	return UNKOWN
+	return
 }
 
-func EncodingOffset(encod int) int {
+func EncodingOffset(encod int) (off int, err error) {
 	switch encod {
 	case SANGER:
-		return 33
+		off = 33
 	case SOLEXA:
-		return 64
+		off = 64
 	case ILLUMINA_1_3:
-		return 64
+		off = 64
 	case ILLUMINA_1_5:
-		return 64
+		off = 64
 	case ILLUMINA_1_8:
-		return 33
+		off = 33
 	case UNKOWN:
-		return 0
+		off = 0
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("This encoding Code does not exist : %d", encod)))
+		err = fmt.Errorf("this encoding Code does not exist : %d", encod)
 	}
-	return 0
+	return
 }
 
-func MinQual(encod int) int {
+func MinQual(encod int) (minq int, err error) {
 	switch encod {
 	case SANGER:
-		return 33
+		minq = 33
 	case SOLEXA:
-		return 59
+		minq = 59
 	case ILLUMINA_1_3:
-		return 64
+		minq = 64
 	case ILLUMINA_1_5:
-		return 67
+		minq = 67
 	case ILLUMINA_1_8:
-		return 33
+		minq = 33
 	case UNKOWN:
-		return 0
+		minq = 0
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("This encoding Code does not exist : %d", encod)))
+		err = fmt.Errorf("this encoding Code does not exist : %d", encod)
 	}
-	return 0
+	return
 }
 
-func MaxQual(encod int) int {
+func MaxQual(encod int) (maxq int, err error) {
 	switch encod {
 	case SANGER:
-		return 73
+		maxq = 73
 	case SOLEXA:
-		return 104
+		maxq = 104
 	case ILLUMINA_1_3:
-		return 104
+		maxq = 104
 	case ILLUMINA_1_5:
-		return 104
+		maxq = 104
 	case ILLUMINA_1_8:
-		return 74
+		maxq = 74
 	case UNKOWN:
-		return 126
+		maxq = 126
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("This encoding Code does not exist : %d", encod)))
+		err = fmt.Errorf("this encoding Code does not exist : %d", encod)
 	}
-	return 0
+	return
 }

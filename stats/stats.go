@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"github.com/fredericlemoine/fastqutils/error"
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"github.com/fredericlemoine/fastqutils/io"
 )
@@ -30,26 +29,29 @@ func max(a, b int) int {
 	return b
 }
 
-func ComputeStats(parser *io.FastQParser) Stats {
-	nbrecords := 0
-	paired := true
-	totalNt := make([]int64, 5)
-	freqNt := make([]float64, 5)
+func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
+	var nbrecords int = 0
+	var paired bool = true
+	var totalNt []int64 = make([]int64, 5)
+	var freqNt []float64
 	var total int64 = 0
 	var meanQual float64
-	minqual, maxqual := 1000, 0
+	var minqual, maxqual int = 1000, 0
+	var nt int
+	var entry1, entry2 *fastq.FastqEntry
 
 	for {
-		entry1, entry2, err := parser.NextEntry()
+		entry1, entry2, err = parser.NextEntry()
 		if err != nil {
 			if err.Error() != "EOF" {
-				error.WarnMessage(err)
+				return
 			}
 			break
 		}
 
 		for i := 0; i < len(entry1.Sequence); i++ {
-			totalNt[fastq.Index(entry1.Sequence[i])]++
+			nt, _ = fastq.Index(entry1.Sequence[i])
+			totalNt[nt]++
 			meanQual += float64(int(entry1.Quality[i]))
 			minqual = min(minqual, int(entry1.Quality[i]))
 			maxqual = max(maxqual, int(entry1.Quality[i]))
@@ -57,7 +59,8 @@ func ComputeStats(parser *io.FastQParser) Stats {
 		}
 		if entry2 != nil {
 			for i := 0; i < len(entry2.Sequence); i++ {
-				totalNt[fastq.Index(entry2.Sequence[i])]++
+				nt, _ = fastq.Index(entry2.Sequence[i])
+				totalNt[nt]++
 				meanQual += float64(int(entry2.Quality[i]))
 				minqual = min(minqual, int(entry2.Quality[i]))
 				maxqual = max(maxqual, int(entry2.Quality[i]))
@@ -77,13 +80,17 @@ func ComputeStats(parser *io.FastQParser) Stats {
 
 	encoding := DetectEncoding(minqual, maxqual)
 
-	return Stats{
+	off, _ := EncodingOffset(encoding)
+
+	s = Stats{
 		nbrecords,
 		paired,
 		freqNt,
-		meanQual/float64(total) - float64(EncodingOffset(encoding)),
-		minqual - EncodingOffset(encoding),
-		maxqual - EncodingOffset(encoding),
+		meanQual/float64(total) - float64(off),
+		minqual - off,
+		maxqual - off,
 		encoding,
 	}
+
+	return
 }

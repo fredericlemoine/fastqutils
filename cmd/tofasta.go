@@ -3,37 +3,44 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
-	"github.com/spf13/cobra"
+	"log"
 	"os"
 
-	"github.com/fredericlemoine/fastqutils/error"
+	"github.com/spf13/cobra"
+
 	"github.com/fredericlemoine/fastqutils/io"
 )
 
 // tofastaCmd represents the tofasta command
 var tofastaCmd = &cobra.Command{
 	Use:   "tofasta",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Converts input fastq file into fasta",
+	Long:  `Converts input fastq file into fasta.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var w1, w2 *bufio.Writer
 		var f1, f2 *os.File
 		var g1, g2 *gzip.Writer
-		w1, g1, f1 = io.GetWriter(output1, gziped)
+		var parser *io.FastQParser
+		var err error
+
+		if parser, err = openFastqParser(input1, input2); err != nil {
+			return
+		}
+
+		if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+			log.Fatal(err)
+		}
 		if input2 != "none" && output2 != "none" {
-			w2, g2, f2 = io.GetWriter(output2, gziped)
+			if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		for {
 			entry1, entry2, err := parser.NextEntry()
 			if err != nil {
 				if err.Error() != "EOF" {
-					error.WarnMessage(err)
+					log.Fatal(err)
 				}
 				break
 			}

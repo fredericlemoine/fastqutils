@@ -3,11 +3,13 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
+	"log"
+	"os"
+
 	"github.com/fredericlemoine/fastqutils/fastq"
 	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/fredericlemoine/fastqutils/stats"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var paired bool
@@ -31,12 +33,26 @@ It draws uniformly nucleotides from A,C,G,T, and qualities depending on the enco
 		var w1, w2 *bufio.Writer
 		var f1, f2 *os.File
 		var g1, g2 *gzip.Writer
+		var qualenc int
+		var minqual, maxqual int
+		var err error
 
-		qualenc := stats.EncodingFromString(encoding)
-		minqual, maxqual := stats.MinQual(qualenc), stats.MaxQual(qualenc)
-		w1, g1, f1 = io.GetWriter(output1, gziped)
+		if qualenc, err = stats.EncodingFromString(encoding); err != nil {
+			log.Fatal(err)
+		}
+		if minqual, err = stats.MinQual(qualenc); err != nil {
+			log.Fatal(err)
+		}
+		if maxqual, err = stats.MaxQual(qualenc); err != nil {
+			log.Fatal(err)
+		}
+		if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+			log.Fatal(err)
+		}
 		if paired && output2 != "none" {
-			w2, g2, f2 = io.GetWriter(output2, gziped)
+			if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		for i := 0; i < nbseqs; i++ {

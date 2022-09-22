@@ -3,12 +3,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
-	errorp "github.com/fredericlemoine/fastqutils/error"
 	"github.com/spf13/cobra"
 )
 
@@ -35,12 +35,12 @@ var bam2FastaCmd = &cobra.Command{
 			infile = os.Stdin
 		} else {
 			if infile, err = os.Open(toFastaInput); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 		}
 
 		if bamreader, err = bam.NewReader(infile, 1); err != nil {
-			errorp.ExitWithMessage(err)
+			log.Fatal(err)
 		}
 		header = bamreader.Header()
 		for _, r := range header.Refs() {
@@ -51,20 +51,20 @@ var bam2FastaCmd = &cobra.Command{
 			outfile = os.Stdout
 		} else {
 			if outfile, err = os.Create(toFastaOutput); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 		}
 		writer = bufio.NewWriter(outfile)
 		for {
 			if rec, err = bamreader.Read(); err != nil {
 				if err.Error() != "EOF" {
-					errorp.WarnMessage(err)
+					log.Fatal(err)
 				}
 				break
 			}
 
 			if prev != nil && prev.Ref.ID() == rec.Ref.ID() && prev.Start() > rec.Start() {
-				errorp.ExitWithMessage(fmt.Errorf("Bam file is not sorted by coordinate, please consider using samtools sort"))
+				log.Fatal(fmt.Errorf("bam file is not sorted by coordinate, please consider using samtools sort"))
 			}
 			if prev != nil && prev.Ref.ID() != rec.Ref.ID() {
 				offset += prev.Ref.Len()

@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"crypto/md5"
-	"io"
+	"log"
 	"os"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
-	errorp "github.com/fredericlemoine/fastqutils/error"
+	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/spf13/cobra"
 )
 
@@ -25,26 +24,34 @@ var tobamCmd = &cobra.Command{
 		var r1, r2 *sam.Record
 		var f *os.File
 		var err error
-		mdsum := md5.New()
-		io.WriteString(mdsum, "*")
+		var parser *io.FastQParser
+
+		//mdsum := md5.New()
+		//io.WriteString(mdsum, "*")
+
+		if parser, err = openFastqParser(input1, input2); err != nil {
+			log.Fatal(err)
+		}
 
 		if output == "stdout" || output == "-" {
 			f = os.Stdout
 		} else {
 			if f, err = os.Create(output); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 		}
 		if header, err = sam.NewHeader(nil, nil); err != nil {
-			errorp.ExitWithMessage(err)
+			log.Fatal(err)
 		}
-		bamwriter, err = bam.NewWriter(f, header, 1)
+		if bamwriter, err = bam.NewWriter(f, header, 1); err != nil {
+			log.Fatal(err)
+		}
 
 		for {
 			entry1, entry2, err := parser.NextEntry()
 			if err != nil {
 				if err.Error() != "EOF" {
-					errorp.WarnMessage(err)
+					log.Fatal(err)
 				}
 				break
 			}
@@ -54,21 +61,21 @@ var tobamCmd = &cobra.Command{
 				flag1 = flag1 | sam.Paired | sam.MateUnmapped
 			}
 			if r1, err = sam.NewRecord(string(entry1.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry1.Sequence, entry1.Quality, []sam.Aux{}); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 			r1.Flags = flag1
 			if err = bamwriter.Write(r1); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 
 			if entry2 != nil {
 				flag2 := sam.Read2 | sam.Unmapped | sam.Paired | sam.MateUnmapped
 				if r2, err = sam.NewRecord(string(entry2.Name), nil, nil, -1, -1, 0, byte(0), []sam.CigarOp{}, entry2.Sequence, entry2.Quality, []sam.Aux{}); err != nil {
-					errorp.ExitWithMessage(err)
+					log.Fatal(err)
 				}
 				r2.Flags = flag2
 				if err = bamwriter.Write(r2); err != nil {
-					errorp.ExitWithMessage(err)
+					log.Fatal(err)
 				}
 			}
 		}

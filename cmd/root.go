@@ -10,14 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
-
 // Version stores tool version
 var Version string = "Unknown"
 
 var input1 string
 var input2 string
-var parser *io.FastQParser
 var seed int64
 
 // RootCmd represents the root Command
@@ -34,11 +31,6 @@ Works for single and paired end files.
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		rand.Seed(seed)
-		if input2 != "none" {
-			parser = io.NewPairedEndParser(input1, input2)
-		} else {
-			parser = io.NewSingleEndParser(input1)
-		}
 	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -53,8 +45,15 @@ func Execute() {
 	}
 }
 
+func openFastqParser(input1, input2 string) (fp *io.FastQParser, err error) {
+	if input2 != "none" {
+		fp, err = io.NewPairedEndParser(input1, input2)
+	} else {
+		fp, err = io.NewSingleEndParser(input1)
+	}
+	return
+}
+
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&input1, "input-1", "1", "stdin", "First read fastq file")
-	RootCmd.PersistentFlags().StringVarP(&input2, "input-2", "2", "none", "Second read fastq file")
 	RootCmd.PersistentFlags().Int64VarP(&seed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 }

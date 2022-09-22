@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
-	errorp "github.com/fredericlemoine/fastqutils/error"
 	"github.com/spf13/cobra"
 )
 
@@ -44,11 +44,11 @@ var capCmd = &cobra.Command{
 			infile = os.Stdin
 		} else {
 			if infile, err = os.Open(capInput); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 		}
 		if bamreader, err = bam.NewReader(infile, 1); err != nil {
-			errorp.ExitWithMessage(err)
+			log.Fatal(err)
 		}
 		header = bamreader.Header()
 
@@ -56,10 +56,12 @@ var capCmd = &cobra.Command{
 			outfile = os.Stdout
 		} else {
 			if outfile, err = os.Create(capOutput); err != nil {
-				errorp.ExitWithMessage(err)
+				log.Fatal(err)
 			}
 		}
-		bamwriter, err = bam.NewWriter(outfile, header, 1)
+		if bamwriter, err = bam.NewWriter(outfile, header, 1); err != nil {
+			log.Fatal(err)
+		}
 		curRef = -1
 		reservoir = make([]*sam.Record, maxNReadsPerWindow)
 		windowStart = 0
@@ -67,19 +69,19 @@ var capCmd = &cobra.Command{
 		for {
 			if rec, err = bamreader.Read(); err != nil {
 				if err.Error() != "EOF" {
-					errorp.WarnMessage(err)
+					log.Fatal(err)
 				}
 				break
 			}
 
 			if prev != nil && prev.Ref.ID() == rec.Ref.ID() && prev.Start() > rec.Start() {
-				errorp.ExitWithMessage(fmt.Errorf("Bam file is not sorted by coordinate, please consider using samtools sort"))
+				log.Fatal(fmt.Errorf("bam file is not sorted by coordinate, please consider using samtools sort"))
 			}
 
 			if curRef != rec.Ref.ID() {
 				fmt.Printf("WriteReservoir ChangeChr: %d - %d - %d\n", maxNReadsPerWindow, windowStart, windowElements)
 				if err = writeReservoir(bamwriter, reservoir, min(windowElements, maxNReadsPerWindow)); err != nil {
-					errorp.ExitWithMessage(err)
+					log.Fatal(err)
 				}
 				// Then change the ref
 				curRef = rec.Ref.ID()
@@ -98,7 +100,7 @@ var capCmd = &cobra.Command{
 			if rec.Start() >= windowStart+capWindowSize {
 				fmt.Printf("WriteReservoir ChangeWindows: %d - %d - %d\n", maxNReadsPerWindow, windowStart, windowElements)
 				if err = writeReservoir(bamwriter, reservoir, min(windowElements, maxNReadsPerWindow)); err != nil {
-					errorp.ExitWithMessage(err)
+					log.Fatal(err)
 				}
 				reservoir = make([]*sam.Record, maxNReadsPerWindow)
 				windowStart = rec.Start()
@@ -118,7 +120,7 @@ var capCmd = &cobra.Command{
 			prev = rec
 		}
 		if err = writeReservoir(bamwriter, reservoir, min(windowElements, maxNReadsPerWindow)); err != nil {
-			errorp.ExitWithMessage(err)
+			log.Fatal(err)
 		}
 
 		bamwriter.Close()

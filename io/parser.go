@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"compress/gzip"
 	"errors"
-	errorp "github.com/fredericlemoine/fastqutils/error"
-	"github.com/fredericlemoine/fastqutils/fastq"
 	"os"
 	"strings"
+
+	"github.com/fredericlemoine/fastqutils/fastq"
 )
 
 var ErrBufferFull = errors.New("bufio: buffer full")
@@ -17,38 +17,52 @@ type FastQParser struct {
 	reader2 *bufio.Reader // paired read file (if any, nil otherwise)
 }
 
-func NewSingleEndParser(file string) *FastQParser {
-	reader := getReader(file)
-	return &FastQParser{
+func NewSingleEndParser(file string) (fp *FastQParser, err error) {
+	var reader *bufio.Reader
+	if reader, err = getReader(file); err != nil {
+		return
+	}
+
+	fp = &FastQParser{
 		reader,
 		nil,
 	}
+
+	return
 }
 
-func NewPairedEndParser(read1 string, read2 string) *FastQParser {
-	reader1 := getReader(read1)
-	reader2 := getReader(read2)
-	return &FastQParser{
+func NewPairedEndParser(read1 string, read2 string) (fp *FastQParser, err error) {
+	var reader1, reader2 *bufio.Reader
+
+	if reader1, err = getReader(read1); err != nil {
+		return
+	}
+	if reader2, err = getReader(read2); err != nil {
+		return
+	}
+	fp = &FastQParser{
 		reader1,
 		reader2,
 	}
+	return
 }
 
-func getReader(file string) (reader *bufio.Reader) {
+func getReader(file string) (reader *bufio.Reader, err error) {
 	var fi *os.File
-	var err error
+	var gr *gzip.Reader
+
 	if file == "stdin" || file == "-" {
 		fi = os.Stdin
 	} else {
 		fi, err = os.Open(file)
 		if err != nil {
-			errorp.ExitWithMessage(err)
+			return
 		}
 	}
 
 	if strings.HasSuffix(file, ".gz") {
-		if gr, err := gzip.NewReader(fi); err != nil {
-			errorp.ExitWithMessage(err)
+		if gr, err = gzip.NewReader(fi); err != nil {
+			return
 		} else {
 			reader = bufio.NewReader(gr)
 		}
@@ -86,18 +100,26 @@ func (p *FastQParser) NextEntry() (entry1 *fastq.FastqEntry, entry2 *fastq.Fastq
 	if name1, seq1, qual1, err = readln(p.reader1); err != nil {
 		return
 	}
-	entry1 = &fastq.FastqEntry{name1, seq1, qual1}
+	entry1 = &fastq.FastqEntry{
+		Name:     name1,
+		Sequence: seq1,
+		Quality:  qual1,
+	}
 
 	if p.reader2 != nil {
 		if name2, seq2, qual2, err = readln(p.reader2); err != nil {
 			return
 		}
-		entry2 = &fastq.FastqEntry{name2, seq2, qual2}
 
 		if len(seq2) != len(qual2) {
-			errorp.ExitWithMessage(errors.New("Length of sequence is different from length of quality"))
+			err = errors.New("length of sequence is different from length of quality")
+			return
 		}
-		entry2 = &fastq.FastqEntry{name2, seq2, qual2}
+		entry2 = &fastq.FastqEntry{
+			Name:     name2,
+			Sequence: seq2,
+			Quality:  qual2,
+		}
 	}
 	return
 }

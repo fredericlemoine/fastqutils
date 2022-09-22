@@ -2,11 +2,10 @@ package fastq
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"github.com/fredericlemoine/fastqutils/error"
-	"github.com/fredericlemoine/gostats"
 	"math/rand"
+
+	"github.com/fredericlemoine/gostats"
 )
 
 type FastqEntry struct {
@@ -29,48 +28,51 @@ func GenFastQEntry(length int, id int, minqual, maxqual int) *FastqEntry {
 
 func genseq(length int) []byte {
 	var buf bytes.Buffer
+	var nt byte
+
 	for i := 0; i < length; i++ {
-		buf.WriteByte(Nt(rand.Intn(4)))
+		nt, _ = Nt(rand.Intn(4))
+		buf.WriteByte(nt)
 	}
 	return buf.Bytes()
 }
 
 // Returns the nt
-func Nt(n int) byte {
+func Nt(n int) (nt byte, err error) {
 	switch n {
 	case 0:
-		return 'A'
+		nt = 'A'
 	case 1:
-		return 'C'
+		nt = 'C'
 	case 2:
-		return 'G'
+		nt = 'G'
 	case 3:
-		return 'T'
+		nt = 'T'
 	case 4:
-		return 'N'
+		nt = 'N'
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide with code %d", n)))
+		err = fmt.Errorf("No nucleotide with code %d", n)
 	}
-	return '\n'
+	return
 }
 
 // Returns the nt
-func Index(b byte) int {
+func Index(b byte) (nt int, err error) {
 	switch b {
 	case 'A':
-		return 0
+		nt = 0
 	case 'C':
-		return 1
+		nt = 1
 	case 'G':
-		return 2
+		nt = 2
 	case 'T':
-		return 3
+		nt = 3
 	case 'N':
-		return 4
+		nt = 4
 	default:
-		error.ExitWithMessage(errors.New(fmt.Sprintf("No nucleotide %c", b)))
+		err = fmt.Errorf("No nucleotide %c", b)
 	}
-	return '\n'
+	return
 }
 
 func genqual(length int, minqual, maxqual int) []byte {
