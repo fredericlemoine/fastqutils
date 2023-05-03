@@ -19,6 +19,7 @@ var statsCmd = &cobra.Command{
 		var err error
 		var nt byte
 		var stat stats.Stats
+		var strenc string
 
 		if parser, err = openFastqParser(input1, input2); err != nil {
 			return
@@ -36,14 +37,15 @@ var statsCmd = &cobra.Command{
 			fmt.Print("\t")
 			fmt.Println(v)
 		}
-		fmt.Print("Encoding\t")
-		fmt.Println(stats.EncodingToString(stat.Encoding))
-		fmt.Print("AvgQual\t")
-		fmt.Println(stat.MeanQual)
-		fmt.Print("MinQual\t")
-		fmt.Println(stat.MinQual)
-		fmt.Print("MaxQual\t")
-		fmt.Println(stat.MaxQual)
+		if strenc, err = stats.EncodingToString(stat.Encoding); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Encoding\t%s\n", strenc)
+		fmt.Printf("AvgQual\t%.3f\n", stat.MeanQual)
+		fmt.Printf("MinQual\t%d\n", stat.MinQual)
+		fmt.Printf("MaxQual\t%d\n", stat.MaxQual)
+		fmt.Printf("Quality Histogram\n%s\n", stat.QualHistogram.Draw(100))
+		fmt.Printf("Length Histogram\n%s\n", stat.LenHistogram.Draw(100))
 	},
 }
 

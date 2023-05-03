@@ -2,17 +2,20 @@ package stats
 
 import (
 	"github.com/fredericlemoine/fastqutils/fastq"
+	"github.com/fredericlemoine/fastqutils/hist"
 	"github.com/fredericlemoine/fastqutils/io"
 )
 
 type Stats struct {
-	NSeq     int       // Number of sequences
-	Paired   bool      // If the Fastq are paired end
-	TotalNt  []float64 // global % of A / C / G / T
-	MeanQual float64   // Average base quality
-	MinQual  int       // Min quality score
-	MaxQual  int       // Max quality score
-	Encoding int       // Quality encoding
+	NSeq          int       // Number of sequences
+	Paired        bool      // If the Fastq are paired end
+	TotalNt       []float64 // global % of A / C / G / T
+	MeanQual      float64   // Average base quality
+	MinQual       int       // Min quality score
+	MaxQual       int       // Max quality score
+	Encoding      int       // Quality encoding
+	QualHistogram *hist.IntHistogram
+	LenHistogram  *hist.IntHistogram
 }
 
 func min(a, b int) int {
@@ -39,6 +42,10 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 	var minqual, maxqual int = 1000, 0
 	var nt int
 	var entry1, entry2 *fastq.FastqEntry
+	var qualHistogram, lenHistogram *hist.IntHistogram
+
+	qualHistogram = hist.NewIntHistogram(30)
+	lenHistogram = hist.NewIntHistogram(20)
 
 	for {
 		entry1, entry2, err = parser.NextEntry()
@@ -50,21 +57,25 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 			break
 		}
 
+		lenHistogram.AddPoint(int(len(entry1.Sequence)))
 		for i := 0; i < len(entry1.Sequence); i++ {
 			nt, _ = fastq.Index(entry1.Sequence[i])
 			totalNt[nt]++
 			meanQual += float64(int(entry1.Quality[i]))
 			minqual = min(minqual, int(entry1.Quality[i]))
 			maxqual = max(maxqual, int(entry1.Quality[i]))
+			qualHistogram.AddPoint(int(entry1.Quality[i]))
 			total++
 		}
 		if entry2 != nil {
+			lenHistogram.AddPoint(int(len(entry2.Sequence)))
 			for i := 0; i < len(entry2.Sequence); i++ {
 				nt, _ = fastq.Index(entry2.Sequence[i])
 				totalNt[nt]++
 				meanQual += float64(int(entry2.Quality[i]))
 				minqual = min(minqual, int(entry2.Quality[i]))
 				maxqual = max(maxqual, int(entry2.Quality[i]))
+				qualHistogram.AddPoint(int(entry1.Quality[i]))
 				total++
 			}
 		}
@@ -91,6 +102,8 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 		minqual - off,
 		maxqual - off,
 		encoding,
+		qualHistogram,
+		lenHistogram,
 	}
 
 	return
