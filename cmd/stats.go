@@ -35,7 +35,7 @@ var statsCmd = &cobra.Command{
 			nt, _ = fastq.Nt(i)
 			fmt.Printf("%c", nt)
 			fmt.Print("\t")
-			fmt.Println(v)
+			fmt.Printf("%.2f\n", v)
 		}
 		if strenc, err = stats.EncodingToString(stat.Encoding); err != nil {
 			log.Fatal(err)
