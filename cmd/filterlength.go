@@ -47,6 +47,15 @@ var filterLengthCmd = &cobra.Command{
 
 	if --min-length -1 (default): then no minimal length
 	if --max-length -1 (default): then no maximal length
+
+	To filter reads in bam files:
+	fastqutils filter length --min-length <> --max-length <> -b  -i <inbam> -o <outbam>
+
+	To filter reads in fastq files:
+	fastqutils filter length --min-length <> --max-length <> -b  -1 <fastq1> -2 <fastq2> --output1 <outfastq1> --output2 <outfastq2>
+
+	Option --paired-both is only functionnal for fastqfiles.
+	For bam files, each record is kept or discarded based on its length, independently of its mate read.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
@@ -59,7 +68,6 @@ var filterLengthCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		}
-
 	},
 }
 
