@@ -2,6 +2,7 @@ package hist
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -70,7 +71,7 @@ func (ih *IntHistogram) Draw(width int) string {
 
 func (ih *IntHistogram) updateBins() {
 	for i, p := range ih.points {
-		bin := int(float64(ih.nbins-1) * float64(p-ih.min) / float64(ih.max-ih.min))
+		bin := int(float64((ih.nbins-1)*(p-ih.min)) / math.Max(float64(ih.max-ih.min), 1.0))
 		ih.counts[bin]++
 		if i == 0 || ih.counts[bin] > ih.maxcounts {
 			ih.maxcounts = ih.counts[bin]
