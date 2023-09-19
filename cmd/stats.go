@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var histos bool
+
 var statsCmd = &cobra.Command{
 	Use:   "stats",
 	Short: "Displays different statistics about fastq file(s)",
@@ -24,7 +26,7 @@ var statsCmd = &cobra.Command{
 		if parser, err = openFastqParser(input1, input2); err != nil {
 			return
 		}
-		if stat, err = stats.ComputeStats(parser); err != nil {
+		if stat, err = stats.ComputeStats(parser, histos); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Print("NSeq\t")
@@ -44,8 +46,10 @@ var statsCmd = &cobra.Command{
 		fmt.Printf("AvgQual\t%.3f\n", stat.MeanQual)
 		fmt.Printf("MinQual\t%d\n", stat.MinQual)
 		fmt.Printf("MaxQual\t%d\n", stat.MaxQual)
-		fmt.Printf("Quality Histogram\n%s\n", stat.QualHistogram.Draw(100))
-		fmt.Printf("Length Histogram\n%s\n", stat.LenHistogram.Draw(100))
+		if histos {
+			fmt.Printf("Quality Histogram\n%s\n", stat.QualHistogram.Draw(100))
+			fmt.Printf("Length Histogram\n%s\n", stat.LenHistogram.Draw(100))
+		}
 	},
 }
 
@@ -53,5 +57,6 @@ func init() {
 	RootCmd.AddCommand(statsCmd)
 	statsCmd.PersistentFlags().StringVarP(&input1, "input1", "1", "stdin", "First read fastq file")
 	statsCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
+	statsCmd.PersistentFlags().BoolVar(&histos, "histograms", false, "Display length and quality histograms")
 
 }

@@ -32,7 +32,7 @@ func max(a, b int) int {
 	return b
 }
 
-func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
+func ComputeStats(parser *io.FastQParser, histos bool) (s Stats, err error) {
 	var nbrecords int = 0
 	var paired bool = true
 	var totalNt []int64 = make([]int64, 5)
@@ -44,8 +44,10 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 	var entry1, entry2 *fastq.FastqEntry
 	var qualHistogram, lenHistogram *hist.IntHistogram
 
-	qualHistogram = hist.NewIntHistogram(30)
-	lenHistogram = hist.NewIntHistogram(20)
+	if histos {
+		qualHistogram = hist.NewIntHistogram(30)
+		lenHistogram = hist.NewIntHistogram(20)
+	}
 
 	for {
 		entry1, entry2, err = parser.NextEntry()
@@ -57,25 +59,33 @@ func ComputeStats(parser *io.FastQParser) (s Stats, err error) {
 			break
 		}
 
-		lenHistogram.AddPoint(int(len(entry1.Sequence)))
+		if histos {
+			lenHistogram.AddPoint(int(len(entry1.Sequence)))
+		}
 		for i := 0; i < len(entry1.Sequence); i++ {
 			nt, _ = fastq.Index(entry1.Sequence[i])
 			totalNt[nt]++
 			meanQual += float64(int(entry1.Quality[i]))
 			minqual = min(minqual, int(entry1.Quality[i]))
 			maxqual = max(maxqual, int(entry1.Quality[i]))
-			qualHistogram.AddPoint(int(entry1.Quality[i]))
+			if histos {
+				qualHistogram.AddPoint(int(entry1.Quality[i]))
+			}
 			total++
 		}
 		if entry2 != nil {
-			lenHistogram.AddPoint(int(len(entry2.Sequence)))
+			if histos {
+				lenHistogram.AddPoint(int(len(entry2.Sequence)))
+			}
 			for i := 0; i < len(entry2.Sequence); i++ {
 				nt, _ = fastq.Index(entry2.Sequence[i])
 				totalNt[nt]++
 				meanQual += float64(int(entry2.Quality[i]))
 				minqual = min(minqual, int(entry2.Quality[i]))
 				maxqual = max(maxqual, int(entry2.Quality[i]))
-				qualHistogram.AddPoint(int(entry1.Quality[i]))
+				if histos {
+					qualHistogram.AddPoint(int(entry2.Quality[i]))
+				}
 				total++
 			}
 		}
