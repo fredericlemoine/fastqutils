@@ -27,6 +27,12 @@ var varCapCmd = &cobra.Command{
 	Short: "Downsample reads at regions with too high coverage. Given maximum coverage can be variable along the genome.",
 	Long: `Produces a bam file with lower coverage, having a pattern as given in an input coverage file.
 
+	The coverage input file (-c) must be tab separated with the following fields:
+	- chromosome
+	- start
+	- end
+	- desired coverage
+
 	Be careful: 
 	1) Input bam file must be sorted
 	2) Output bam file is not sorted anymore
