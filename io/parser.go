@@ -19,7 +19,7 @@ type FastQParser struct {
 
 func NewSingleEndParser(file string) (fp *FastQParser, err error) {
 	var reader *bufio.Reader
-	if reader, err = getReader(file); err != nil {
+	if reader, err = GetReader(file); err != nil {
 		return
 	}
 
@@ -34,10 +34,10 @@ func NewSingleEndParser(file string) (fp *FastQParser, err error) {
 func NewPairedEndParser(read1 string, read2 string) (fp *FastQParser, err error) {
 	var reader1, reader2 *bufio.Reader
 
-	if reader1, err = getReader(read1); err != nil {
+	if reader1, err = GetReader(read1); err != nil {
 		return
 	}
-	if reader2, err = getReader(read2); err != nil {
+	if reader2, err = GetReader(read2); err != nil {
 		return
 	}
 	fp = &FastQParser{
@@ -47,7 +47,7 @@ func NewPairedEndParser(read1 string, read2 string) (fp *FastQParser, err error)
 	return
 }
 
-func getReader(file string) (reader *bufio.Reader, err error) {
+func GetReader(file string) (reader *bufio.Reader, err error) {
 	var fi *os.File
 	var gr *gzip.Reader
 
@@ -76,7 +76,7 @@ func getReader(file string) (reader *bufio.Reader, err error) {
 // from the input buffered reader.
 // An error is returned iff there is an error with the
 // buffered reader.
-func readln(r *bufio.Reader) (name, seq, qual []byte, err error) {
+func Readln(r *bufio.Reader) (name, seq, qual []byte, err error) {
 	if name, err = r.ReadBytes('\n'); err == nil && name[len(name)-1] == '\n' {
 		name = name[:len(name)-1]
 		if seq, err = r.ReadBytes('\n'); err == nil && seq[len(seq)-1] == '\n' {
@@ -97,7 +97,7 @@ func (p *FastQParser) NextEntry() (entry1 *fastq.FastqEntry, entry2 *fastq.Fastq
 	var name1, name2 []byte
 	var seq1, seq2 []byte
 	var qual1, qual2 []byte
-	if name1, seq1, qual1, err = readln(p.reader1); err != nil {
+	if name1, seq1, qual1, err = Readln(p.reader1); err != nil {
 		return
 	}
 	entry1 = &fastq.FastqEntry{
@@ -107,7 +107,7 @@ func (p *FastQParser) NextEntry() (entry1 *fastq.FastqEntry, entry2 *fastq.Fastq
 	}
 
 	if p.reader2 != nil {
-		if name2, seq2, qual2, err = readln(p.reader2); err != nil {
+		if name2, seq2, qual2, err = Readln(p.reader2); err != nil {
 			return
 		}
 
