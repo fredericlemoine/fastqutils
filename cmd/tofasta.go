@@ -71,6 +71,8 @@ func init() {
 	RootCmd.AddCommand(tofastaCmd)
 
 	tofastaCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
+	tofastaCmd.PersistentFlags().StringVarP(&input1, "input1", "1", "stdin", "First read fastq file")
+	tofastaCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
 	tofastaCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
 	tofastaCmd.PersistentFlags().StringVar(&output2, "output2", "none", "Output file 2 (if paired)")
 }
