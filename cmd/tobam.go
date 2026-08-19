@@ -41,6 +41,7 @@ var tobamCmd = &cobra.Command{
 		if parser, err = openFastqParser(input1, input2); err != nil {
 			log.Fatal(err)
 		}
+		defer parser.Close()
 
 		if output == "stdout" || output == "-" {
 			f = os.Stdout

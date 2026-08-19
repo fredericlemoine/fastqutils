@@ -1,17 +1,18 @@
 GO_EXECUTABLE := go
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
+CGO_ENABLED:=0
 
 all: build install
 
 build:
-	${GO_EXECUTABLE} build -o fastqutils -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
+	CGO_ENABLED=${CGO_ENABLED} ${GO_EXECUTABLE} build -o fastqutils -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
 
 install:
-	${GO_EXECUTABLE} install -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
+	CGO_ENABLED=${CGO_ENABLED} ${GO_EXECUTABLE} install -ldflags "-X github.com/fredericlemoine/fastqutils/cmd.Version=${VERSION}" github.com/fredericlemoine/fastqutils
 
 test:
-	${GO_EXECUTABLE} test github.com/fredericlemoine/fastqutils/tests/
+	CGO_ENABLED=${CGO_ENABLED} ${GO_EXECUTABLE} test github.com/fredericlemoine/fastqutils/tests/
 
 .PHONY: deploy
 

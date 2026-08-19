@@ -20,8 +20,17 @@ jobs:
       with:
         go-version: 1.18.6
 
+    - name: Build dsrc CLI (for .dsrc integration tests)
+      run: |
+        git clone --depth 1 https://github.com/refresh-bio/DSRC.git /tmp/dsrc-src
+        make -C /tmp/dsrc-src -f Makefile.c++11 bin
+        sudo install -m 0755 /tmp/dsrc-src/bin/dsrc /usr/local/bin/dsrc
+
     - name: Build
       run: go get . && go build . && go install .
 
     - name: Test
       run: fastqutils -h
+
+    - name: Test (Go unit tests, including dsrc round-trip)
+      run: go test ./...

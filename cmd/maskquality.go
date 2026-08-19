@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"bufio"
-	"compress/gzip"
+	stdio "io"
 	"log"
 	"os"
 
@@ -50,7 +50,7 @@ var qualityCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		} else {
-			if err := maskQualityFastq(input1, input2, encoding, output1, output2, gziped, qual); err != nil {
+			if err := maskQualityFastq(input1, input2, encoding, output1, output2, gziped, dsrcOut, qual); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -69,6 +69,8 @@ func init() {
 	qualityCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
 	qualityCmd.PersistentFlags().StringVar(&encoding, "encoding", "illumina1.8", "Base quality encoding, possible values: sanger, solexa, illumina1.3, illumina1.5, illumina1.8")
 	qualityCmd.PersistentFlags().IntVarP(&qual, "quality", "q", 20, "Quality cutoff below which bases are masked")
+	qualityCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
+	qualityCmd.PersistentFlags().BoolVar(&dsrcOut, "dsrc", false, "If true, will generate dsrc-compressed file(s) : .dsrc extension is added automatically (requires the 'dsrc' executable, see dsrc/README.md)")
 }
 
 func maskQUalityBam(inbam, outbam string, qual int) (err error) {
@@ -140,10 +142,9 @@ func maskQUalityBam(inbam, outbam string, qual int) (err error) {
 	return
 }
 
-func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped bool, qual int) (err error) {
+func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped, dsrced bool, qual int) (err error) {
 	var w1, w2 *bufio.Writer
-	var f1, f2 *os.File
-	var g1, g2 *gzip.Writer
+	var closer1, closer2 stdio.Closer
 	var entry1, entry2 *fastq.FastqEntry
 	var parser *io.FastQParser
 	var enc int
@@ -159,12 +160,13 @@ func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped 
 	if parser, err = openFastqParser(input1, input2); err != nil {
 		return
 	}
+	defer parser.Close()
 
-	if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+	if w1, closer1, err = io.GetWriter(output1, gziped, dsrced); err != nil {
 		return
 	}
 	if input2 != "none" && output2 != "none" {
-		if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+		if w2, closer2, err = io.GetWriter(output2, gziped, dsrced); err != nil {
 			return
 		}
 	}
@@ -184,7 +186,14 @@ func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped 
 				entry1.Sequence[i] = 'N'
 			}
 		}
-		io.WriteEntryFasta(w1, entry1)
+		// NOTE: this used to call io.WriteEntryFasta here, which silently
+		// wrote 2-line FASTA records (name+sequence, no quality) even
+		// though this command reads and is meant to write FASTQ. Fixed to
+		// io.WriteEntry so quality-masked reads keep their quality scores
+		// and the output is valid FASTQ -- which --gz/--dsrc compression
+		// also depends on, since DSRC specifically expects 4-line FASTQ
+		// records.
+		io.WriteEntry(w1, entry1)
 		if w2 != nil {
 			for i, q := range entry2.Quality {
 				// If the base at the current index has bad quality, we replace it with a N
@@ -192,24 +201,18 @@ func maskQualityFastq(input1, input2, encoding, output1, output2 string, gziped 
 					entry2.Sequence[i] = 'N'
 				}
 			}
-			io.WriteEntryFasta(w2, entry2)
+			io.WriteEntry(w2, entry2)
 		}
 	}
 
-	w1.Flush()
-	if g1 != nil {
-		g1.Flush()
-		g1.Close()
+	if err = closer1.Close(); err != nil {
+		return
 	}
-	f1.Close()
 
 	if input2 != "none" && output2 != "none" {
-		w2.Flush()
-		if g2 != nil {
-			g2.Flush()
-			g2.Close()
+		if err = closer2.Close(); err != nil {
+			return
 		}
-		f2.Close()
 	}
 	return
 }

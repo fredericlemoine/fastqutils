@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"bufio"
-	"compress/gzip"
+	stdio "io"
 	"log"
 	"math/rand"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -39,6 +38,7 @@ var sampleCmd = &cobra.Command{
 		if parser, err = openFastqParser(input1, input2); err != nil {
 			log.Fatal(err)
 		}
+		defer parser.Close()
 
 		for {
 			entry1, entry2, err := parser.NextEntry()
@@ -71,14 +71,13 @@ var sampleCmd = &cobra.Command{
 		}
 
 		var w1, w2 *bufio.Writer
-		var f1, f2 *os.File
-		var g1, g2 *gzip.Writer
+		var closer1, closer2 stdio.Closer
 
-		if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+		if w1, closer1, err = io.GetWriter(output1, gziped, dsrcOut); err != nil {
 			log.Fatal(err)
 		}
 		if input2 != "none" && output2 != "none" {
-			if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+			if w2, closer2, err = io.GetWriter(output2, gziped, dsrcOut); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -92,19 +91,13 @@ var sampleCmd = &cobra.Command{
 				io.WriteEntry(w2, entry2)
 			}
 		}
-		w1.Flush()
-		if g1 != nil {
-			g1.Flush()
-			g1.Close()
+		if err = closer1.Close(); err != nil {
+			log.Fatal(err)
 		}
-		f1.Close()
 		if input2 != "none" && output2 != "none" {
-			w2.Flush()
-			if g2 != nil {
-				g2.Flush()
-				g2.Close()
+			if err = closer2.Close(); err != nil {
+				log.Fatal(err)
 			}
-			f2.Close()
 		}
 	},
 }
@@ -115,6 +108,7 @@ func init() {
 	sampleCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
 	sampleCmd.PersistentFlags().IntVarP(&sampleNumber, "number", "n", 1, "Number of reads to sample from the FastQ file")
 	sampleCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
+	sampleCmd.PersistentFlags().BoolVar(&dsrcOut, "dsrc", false, "If true, will generate dsrc-compressed file(s) : .dsrc extension is added automatically (requires the 'dsrc' executable, see dsrc/README.md)")
 	sampleCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
 	sampleCmd.PersistentFlags().StringVar(&output2, "output2", "none", "Output file 2 (if paired)")
 }

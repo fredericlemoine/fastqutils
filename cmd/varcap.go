@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	stdio "io"
 	"log"
 	"math/rand"
 	"os"
@@ -33,7 +34,7 @@ var varCapCmd = &cobra.Command{
 	- end
 	- desired coverage
 
-	Be careful: 
+	Be careful:
 	1) Input bam file must be sorted
 	2) Output bam file is not sorted anymore
 `,
@@ -183,6 +184,7 @@ func init() {
 //   - values: desired coverage at each position. If not specified: -1 (means no constraint)
 func parseInputCoverageFile(infile string) (cov map[string][]int, err error) {
 	var ifilereader *bufio.Reader
+	var closer stdio.Closer
 	var line string
 	var err2 error
 	var cols []string
@@ -193,7 +195,10 @@ func parseInputCoverageFile(infile string) (cov map[string][]int, err error) {
 	var ok bool      // tmp variable to test existance of a key in the map
 
 	cov = make(map[string][]int)
-	if ifilereader, err = io.GetReader(infile); err == nil {
+	if ifilereader, closer, err = io.GetReader(infile); err == nil {
+		if closer != nil {
+			defer closer.Close()
+		}
 		line, err2 = Readln(ifilereader)
 		for err2 == nil {
 			cols = strings.Split(line, "\t")

@@ -45,6 +45,11 @@ func Execute() {
 	}
 }
 
+// openFastqParser opens a FastQParser for input1 (and input2, if paired).
+// On success, callers are responsible for calling parser.Close() (e.g.
+// via defer) once they are done reading: for plain and .gz input this is
+// a no-op, but for .dsrc input it releases the backing decompression
+// subprocess.
 func openFastqParser(input1, input2 string) (fp *io.FastQParser, err error) {
 	if input2 != "none" {
 		fp, err = io.NewPairedEndParser(input1, input2)

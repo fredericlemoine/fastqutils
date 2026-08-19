@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"bufio"
-	"compress/gzip"
+	stdio "io"
 	"log"
 	"os"
 
@@ -42,8 +42,8 @@ var filterLengthCmd = &cobra.Command{
 	Use:   "length",
 	Short: "Remove reads that outside the given length interval",
 	Long: `Remove reads that outside the given length interval
-	
-	fastqutils filter length --min-length <> --max-length <> 
+
+	fastqutils filter length --min-length <> --max-length <>
 
 	if --min-length -1 (default): then no minimal length
 	if --max-length -1 (default): then no maximal length
@@ -64,7 +64,7 @@ var filterLengthCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		} else {
-			if err = filterLengthFastq(input1, input2, output1, output2, gziped, minLength, maxLength); err != nil {
+			if err = filterLengthFastq(input1, input2, output1, output2, gziped, dsrcOut, minLength, maxLength); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -82,15 +82,15 @@ func init() {
 	filterLengthCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Output file 1")
 	filterLengthCmd.PersistentFlags().StringVar(&output2, "output2", "none", "Output file 2 (if paired)")
 	filterLengthCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
+	filterLengthCmd.PersistentFlags().BoolVar(&dsrcOut, "dsrc", false, "If true, will generate dsrc-compressed file(s) : .dsrc extension is added automatically (requires the 'dsrc' executable, see dsrc/README.md)")
 	filterLengthCmd.PersistentFlags().StringVarP(&input1, "input1", "1", "stdin", "First read fastq file")
 	filterLengthCmd.PersistentFlags().StringVarP(&input2, "input2", "2", "none", "Second read fastq file")
 }
 
-func filterLengthFastq(input1, input2, output1, output2 string, gziped bool, minLength, maxLength int) (err error) {
+func filterLengthFastq(input1, input2, output1, output2 string, gziped, dsrced bool, minLength, maxLength int) (err error) {
 	var parser *io.FastQParser
 	var w1, w2 *bufio.Writer
-	var f1, f2 *os.File
-	var g1, g2 *gzip.Writer
+	var closer1, closer2 stdio.Closer
 	var remove1, remove2, toWrite bool
 	var entry1, entry2 *fastq.FastqEntry
 
@@ -100,13 +100,14 @@ func filterLengthFastq(input1, input2, output1, output2 string, gziped bool, min
 	if parser, err = openFastqParser(input1, input2); err != nil {
 		return
 	}
+	defer parser.Close()
 
-	if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+	if w1, closer1, err = io.GetWriter(output1, gziped, dsrced); err != nil {
 		return
 	}
 
 	if input2 != "none" && output2 != "none" {
-		if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+		if w2, closer2, err = io.GetWriter(output2, gziped, dsrced); err != nil {
 			return
 		}
 	}
@@ -142,19 +143,13 @@ func filterLengthFastq(input1, input2, output1, output2 string, gziped bool, min
 		}
 	}
 
-	w1.Flush()
-	if g1 != nil {
-		g1.Flush()
-		g1.Close()
+	if err = closer1.Close(); err != nil {
+		return
 	}
-	f1.Close()
 	if input2 != "none" && output2 != "none" {
-		w2.Flush()
-		if g2 != nil {
-			g2.Flush()
-			g2.Close()
+		if err = closer2.Close(); err != nil {
+			return
 		}
-		f2.Close()
 	}
 	log.Printf("Wrote %d fastq records", nbrecords)
 	log.Printf("Discarded %d fastq records", discarded)

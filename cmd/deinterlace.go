@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"bufio"
-	"compress/gzip"
+	stdio "io"
 	"log"
-	"os"
 
 	"github.com/fredericlemoine/fastqutils/io"
 	"github.com/spf13/cobra"
@@ -20,19 +19,19 @@ var deinterlaceCmd = &cobra.Command{
 		var err error
 		var parser *io.FastQParser
 		var w1, w2 *bufio.Writer
-		var f1, f2 *os.File
-		var g1, g2 *gzip.Writer
+		var closer1, closer2 stdio.Closer
 
-		if w1, g1, f1, err = io.GetWriter(output1, gziped); err != nil {
+		if w1, closer1, err = io.GetWriter(output1, gziped, dsrcOut); err != nil {
 			log.Fatal(err)
 		}
-		if w2, g2, f2, err = io.GetWriter(output2, gziped); err != nil {
+		if w2, closer2, err = io.GetWriter(output2, gziped, dsrcOut); err != nil {
 			log.Fatal(err)
 		}
 
 		if parser, err = openFastqParser(input1, "none"); err != nil {
 			log.Fatal(err)
 		}
+		defer parser.Close()
 
 		reads := 0
 		for {
@@ -52,18 +51,12 @@ var deinterlaceCmd = &cobra.Command{
 			reads++
 		}
 
-		w1.Flush()
-		if g1 != nil {
-			g1.Flush()
-			g1.Close()
+		if err = closer1.Close(); err != nil {
+			log.Fatal(err)
 		}
-		f1.Close()
-		w2.Flush()
-		if g2 != nil {
-			g2.Flush()
-			g2.Close()
+		if err = closer2.Close(); err != nil {
+			log.Fatal(err)
 		}
-		f2.Close()
 	},
 }
 
@@ -73,4 +66,5 @@ func init() {
 	deinterlaceCmd.PersistentFlags().StringVar(&output1, "output1", "stdout", "Deinterlaced Output file R1")
 	deinterlaceCmd.PersistentFlags().StringVar(&output2, "output2", "stdout", "Deinterlaced Output file R2")
 	deinterlaceCmd.PersistentFlags().BoolVar(&gziped, "gz", false, "If true, will generate gziped file(s) : .gz extension is added automatically")
+	deinterlaceCmd.PersistentFlags().BoolVar(&dsrcOut, "dsrc", false, "If true, will generate dsrc-compressed file(s) : .dsrc extension is added automatically (requires the 'dsrc' executable, see dsrc/README.md)")
 }

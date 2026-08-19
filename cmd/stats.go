@@ -26,6 +26,8 @@ var statsCmd = &cobra.Command{
 		if parser, err = openFastqParser(input1, input2); err != nil {
 			return
 		}
+		defer parser.Close()
+
 		if stat, err = stats.ComputeStats(parser, histos); err != nil {
 			log.Fatal(err)
 		}
